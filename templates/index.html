@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LetterMutant · Мультиплеер</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <div id="auth" class="container mt-5" style="max-width: 500px;">
+        <div class="card shadow-lg border-0 rounded-4">
+            <div class="card-body p-5">
+                <div class="text-center mb-4">
+                    <span class="display-1">🧬</span>
+                    <h1 class="display-5 fw-bold text-gradient">LetterMutant</h1>
+                    <p class="text-muted">Мультиплеерная битва слов</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Имя пользователя</label>
+                    <input type="text" id="username" class="form-control form-control-lg" placeholder="Введите никнейм..." maxlength="20">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Пароль</label>
+                    <input type="password" id="password" class="form-control form-control-lg" placeholder="Введите пароль...">
+                </div>
+                <div class="d-grid gap-2">
+                    <button id="login-btn" class="btn btn-primary btn-lg"><i class="bi bi-box-arrow-in-right"></i> Войти</button>
+                    <button id="register-btn" class="btn btn-outline-secondary btn-lg"><i class="bi bi-person-plus"></i> Зарегистрироваться</button>
+                </div>
+                <div id="status-message" class="alert mt-3" style="display:none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="app" class="container-fluid p-3" style="display:none;">
+        <div class="row g-3">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm rounded-4">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="fs-2">🧬</span>
+                                <span class="fs-4 fw-bold text-gradient">LetterMutant</span>
+                                <span id="room-badge" class="badge bg-secondary fs-6" style="display:none;">
+                                    <i class="bi bi-door-open"></i> <span id="room-code">—</span>
+                                </span>
+                            </div>
+                            <div class="d-flex align-items-center gap-3 flex-wrap">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="fs-4">👤</span>
+                                    <span id="user-display" class="fw-bold">Игрок</span>
+                                    <span id="rating-display" class="badge bg-warning text-dark">⭐ 0</span>
+                                    <span id="rank-display" class="badge bg-info text-dark">Новичок</span>
+                                </div>
+                                <button id="logout-btn" class="btn btn-outline-danger btn-sm"><i class="bi bi-box-arrow-right"></i> Выйти</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-4">
+                <div class="card border-0 shadow-sm rounded-4">
+                    <div class="card-body p-3">
+                        <h5 class="card-title d-flex justify-content-between">
+                            <span><i class="bi bi-trophy"></i> Лидеры</span>
+                            <span class="badge bg-secondary">Топ-10</span>
+                        </h5>
+                        <ul id="leaderboard-list" class="list-group list-group-flush mt-2">
+                            <li class="list-group-item text-muted text-center">Загрузка...</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-9 col-md-8">
+                <div id="lobby" class="card border-0 shadow-sm rounded-4">
+                    <div class="card-body p-4">
+                        <h4 class="fw-bold">👋 Добро пожаловать, <span id="welcome-name">Игрок</span>!</h4>
+                        <p class="text-muted">Выберите режим игры или присоединитесь к комнате</p>
+                        <div class="d-flex flex-wrap gap-2 mt-3">
+                            <button id="create-room-btn" class="btn btn-primary btn-lg"><i class="bi bi-plus-circle"></i> Создать комнату</button>
+                            <button id="join-room-btn" class="btn btn-outline-secondary btn-lg"><i class="bi bi-link-45deg"></i> Присоединиться</button>
+                            <button id="quick-play-btn" class="btn btn-warning btn-lg"><i class="bi bi-lightning-charge"></i> Рейтинговая игра</button>
+                        </div>
+                        <div id="matchmaking-status" class="mt-3" style="display:none;">
+                            <div class="alert alert-info d-flex align-items-center gap-2">
+                                <span class="spinner-border spinner-border-sm" role="status"></span>
+                                <span id="matchmaking-text">Поиск соперника... Позиция в очереди: <span id="queue-position">0</span></span>
+                                <button id="cancel-matchmaking-btn" class="btn btn-sm btn-danger ms-auto"><i class="bi bi-x-lg"></i> Отмена</button>
+                            </div>
+                        </div>
+                        <div id="join-input" class="mt-3" style="display:none;">
+                            <div class="input-group">
+                                <input type="text" id="room-code-input" class="form-control" placeholder="Введите код комнаты..." maxlength="6">
+                                <button id="join-confirm-btn" class="btn btn-primary"><i class="bi bi-check-lg"></i> Присоединиться</button>
+                                <button id="join-cancel-btn" class="btn btn-outline-secondary"><i class="bi bi-x-lg"></i></button>
+                            </div>
+                        </div>
+                        <div id="status-message" class="alert mt-3" style="display:none;"></div>
+                    </div>
+                </div>
+
+                <div id="room" class="card border-0 shadow-sm rounded-4" style="display:none;">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <h4 class="fw-bold"><i class="bi bi-door-open"></i> Комната <span id="room-code-display">—</span></h4>
+                            <button id="leave-room-btn" class="btn btn-outline-danger"><i class="bi bi-box-arrow-left"></i> Покинуть</button>
+                        </div>
+                        <div class="row g-3 mt-2">
+                            <div class="col-md-7">
+                                <h6><i class="bi bi-people"></i> Игроки</h6>
+                                <ul id="room-players" class="list-group">
+                                    <li class="list-group-item text-muted">Ожидание игроков...</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-5">
+                                <div id="room-status" class="alert alert-secondary text-center">Ожидание игроков...</div>
+                                <button id="start-btn" class="btn btn-success w-100 btn-lg" style="display:none;"><i class="bi bi-play-fill"></i> Начать игру</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="game" class="card border-0 shadow-sm rounded-4" style="display:none;">
+                    <div class="card-body p-4">
+                        <div class="row g-3">
+                            <div class="col-md-4 d-flex align-items-center gap-4">
+                                <div class="position-relative" style="width: 80px; height: 80px;">
+                                    <svg viewBox="0 0 100 100" class="w-100 h-100">
+                                        <circle cx="50" cy="50" r="45" fill="none" stroke="#2d2d44" stroke-width="8"/>
+                                        <circle id="timer-progress" cx="50" cy="50" r="45" fill="none" stroke="#20c997" stroke-width="8" stroke-linecap="round" stroke-dasharray="282.74" stroke-dashoffset="0" transform="rotate(-90 50 50)"/>
+                                    </svg>
+                                    <span id="timer-text" class="position-absolute top-50 start-50 translate-middle display-6 fw-bold">60</span>
+                                </div>
+                                <div>
+                                    <h6 class="text-muted mb-0"><i class="bi bi-star"></i> Мои очки</h6>
+                                    <span id="my-score" class="display-6 fw-bold">0</span>
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="d-flex flex-wrap gap-2 justify-content-end">
+                                    <span class="badge bg-secondary p-2"><i class="bi bi-people"></i> Счёт игроков: <span id="scores-display">—</span></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="board" class="row g-1 mt-3 mx-auto" style="max-width: 400px;">
+                        </div>
+
+                        <div class="mt-3">
+                            <div class="input-group">
+                                <span class="input-group-text bg-dark text-light"><i class="bi bi-pencil"></i> Слово</span>
+                                <span id="current-word" class="form-control bg-dark text-light fs-4 text-center fw-bold" style="min-height: 50px;">—</span>
+                                <button id="clear-btn" class="btn btn-outline-secondary"><i class="bi bi-eraser"></i> Очистить</button>
+                                <button id="submit-btn" class="btn btn-success"><i class="bi bi-check-lg"></i> Отправить</button>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mt-2">
+                            <div class="col-md-6">
+                                <h6><i class="bi bi-list-ul"></i> Мои слова</h6>
+                                <ul id="my-words-list" class="list-group" style="max-height: 150px; overflow-y: auto;">
+                                    <li class="list-group-item text-muted">Пока ничего</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6><i class="bi bi-people"></i> Счёт игроков</h6>
+                                <ul id="scores-list" class="list-group" style="max-height: 150px; overflow-y: auto;">
+                                    <li class="list-group-item text-muted">Ожидаем...</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="modal" class="modal fade" tabindex="-1">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content bg-dark text-light">
+                    <div class="modal-header border-secondary">
+                        <h5 id="modal-title" class="modal-title fw-bold">🏆 Игра окончена</h5>
+                        <button id="modal-close" type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div id="modal-body" class="modal-body"></div>
+                    <div class="modal-footer border-secondary">
+                        <button id="modal-action-btn" class="btn btn-primary" data-bs-dismiss="modal">Закрыть</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.0/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/game.js') }}"></script>
+</body>
+</html>

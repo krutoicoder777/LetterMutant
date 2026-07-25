@@ -1,0 +1,85 @@
+/* static/css/style.css */
+.text-gradient {
+    background: linear-gradient(135deg, #e94560, #f5a623);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.cube {
+    aspect-ratio: 1;
+    background: #1a1a2e;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: 700;
+    color: #fff;
+    box-shadow: 0 4px 0 #0d0d1a, 0 4px 12px rgba(0,0,0,0.4);
+    transition: all 0.15s ease;
+    cursor: pointer;
+    user-select: none;
+    border: 2px solid transparent;
+    width: 100%;
+    height: 100%;
+}
+
+.cube.bonus {
+    border-color: #f5a623;
+    box-shadow: 0 0 16px rgba(245, 166, 35, 0.4);
+    position: relative;
+}
+
+.cube.bonus::after {
+    content: "⭐";
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    font-size: 14px;
+}
+
+.cube.selected {
+    transform: scale(0.92);
+    background: #2d2d44;
+    border-color: #e94560;
+}
+
+.cube:active {
+    transform: scale(0.88);
+}
+
+#board {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    max-width: 400px;
+}
+
+#timer-progress {
+    transition: stroke-dashoffset 0.5s ease, stroke 0.5s;
+}
+
+.list-group-item {
+    background: transparent !important;
+    border-color: #2d2d44 !important;
+    color: #e4e4f0 !important;
+}
+
+.list-group-item.text-muted {
+    color: #6b7a8f !important;
+}
+
+.badge.bg-warning.text-dark {
+    color: #1a1a2e !important;
+}
+
+@media (max-width: 576px) {
+    .cube {
+        font-size: 20px;
+        border-radius: 8px;
+    }
+    #board {
+        gap: 4px;
+    }
+}
