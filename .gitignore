@@ -5,3 +5,4 @@ __pycache__/
 boggle.db
 *.db
 .DS_Store
+flask_session/

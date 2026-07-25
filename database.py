@@ -1,6 +1,8 @@
 import sqlite3
 import bcrypt
 from contextlib import contextmanager
+import math
+from ranks_config import get_rank_by_rating
 
 class Database:
     def __init__(self, db_path='boggle.db'):
@@ -38,8 +40,8 @@ class Database:
                     total_score INTEGER DEFAULT 0,
                     total_words INTEGER DEFAULT 0,
                     best_score INTEGER DEFAULT 0,
-                    rating INTEGER DEFAULT 1200,
-                    rank TEXT DEFAULT 'Школьник',
+                    rating INTEGER DEFAULT 0,
+                    rank TEXT DEFAULT 'Амёба',
                     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
                 );
 
@@ -85,9 +87,11 @@ class Database:
                 (username, password_hash)
             )
             user_id = cursor.lastrowid
+            
+            initial_rank = get_rank_by_rating(150)
             cursor.execute(
-                'INSERT INTO player_stats (user_id) VALUES (?)',
-                (user_id,)
+                'INSERT INTO player_stats (user_id, rating, rank) VALUES (?, ?, ?)',
+                (user_id, 150, initial_rank)
             )
             return user_id
 
@@ -128,26 +132,9 @@ class Database:
 
     def get_rating(self, user_id):
         stats = self.get_stats(user_id)
-        return stats['rating'] if stats else 1200
-
-    def _get_rank_by_rating(self, rating):
-        if rating >= 2400:
-            return 'Мутант'
-        elif rating >= 2100:
-            return 'Псих'
-        elif rating >= 1800:
-            return 'Задрот'
-        elif rating >= 1500:
-            return 'Умник'
-        elif rating >= 1200:
-            return 'Школьник'
-        elif rating >= 900:
-            return 'Карапуз'
-        else:
-            return 'Амёба'
+        return stats['rating'] if stats else 150
 
     def calculate_rating_change(self, player_rating, opponent_rating, player_score, opponent_score):
-        import math
         expected = 1 / (1 + math.pow(10, (opponent_rating - player_rating) / 400))
         if player_score > opponent_score:
             actual = 1.0
@@ -169,7 +156,7 @@ class Database:
                     (player['user_id'],)
                 )
                 row = cursor.fetchone()
-                ratings_before[player['user_id']] = row['rating'] if row else 1200
+                ratings_before[player['user_id']] = row['rating'] if row else 0
             
             cursor.execute('''
                 INSERT INTO game_history (room_id, ended_at, duration, winner_id)
@@ -224,7 +211,7 @@ class Database:
                 
                 cursor.execute('SELECT rating FROM player_stats WHERE user_id = ?', (user_id,))
                 new_rating = cursor.fetchone()['rating']
-                rank = self._get_rank_by_rating(new_rating)
+                rank = get_rank_by_rating(new_rating)
                 cursor.execute(
                     'UPDATE player_stats SET rank = ? WHERE user_id = ?',
                     (rank, user_id)

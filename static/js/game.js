@@ -63,7 +63,7 @@ const elements = {
 };
 
 socket.on('connect', () => {
-    console.log('🔌 Подключено к серверу');
+    console.log('Подключено к серверу');
     if (currentUser && currentUser.username) {
         socket.emit('login', { username: currentUser.username });
     } else {
@@ -75,17 +75,17 @@ socket.on('connect', () => {
 });
 
 socket.on('disconnect', () => {
-    console.log('⚠️ Отключено от сервера');
+    console.log('Отключено от сервера');
     stopTimer();
 });
 
 socket.on('connect_error', (err) => {
-    console.error('❌ Ошибка подключения:', err);
+    console.error('Ошибка подключения:', err);
     showStatus('Ошибка подключения к серверу', 'danger');
 });
 
 socket.on('login_success', (data) => {
-    console.log('✅ Вход выполнен:', data.username);
+    console.log('Вход выполнен:', data.username);
     currentUser = data;
     updateProfile(data);
     showApp(true);
@@ -96,7 +96,7 @@ socket.on('login_success', (data) => {
 });
 
 socket.on('login_error', (msg) => {
-    console.error('❌ Ошибка входа:', msg);
+    console.error('Ошибка входа:', msg);
     showStatus('Ошибка: ' + msg, 'danger');
 });
 
@@ -105,7 +105,7 @@ socket.on('leaderboard', (data) => {
 });
 
 socket.on('room_created', (data) => {
-    console.log('🏠 Комната создана:', data.room);
+    console.log('Комната создана:', data.room);
     currentRoom = data.room;
     isOwner = true;
     showRoomCode(data.room);
@@ -113,7 +113,7 @@ socket.on('room_created', (data) => {
 });
 
 socket.on('room_joined', (data) => {
-    console.log('🔗 Присоединились к комнате:', data.room);
+    console.log('Присоединились к комнате:', data.room);
     currentRoom = data.room;
     isOwner = false;
     showRoomCode(data.room);
@@ -121,12 +121,11 @@ socket.on('room_joined', (data) => {
 });
 
 socket.on('room_update', (data) => {
-    console.log('📩 Обновление комнаты:', data);
+    console.log('Обновление комнаты:', data);
     if (data.room) {
         currentRoom = data.room;
         showRoomCode(data.room);
     }
-    // Если пришло обновление с countdown или room, но мы ещё не в комнате — переключаемся
     if ((data.room || data.countdown !== undefined) && gameState !== 'room' && gameState !== 'playing') {
         setState('room');
         if (data.room) showRoomCode(data.room);
@@ -135,12 +134,12 @@ socket.on('room_update', (data) => {
 });
 
 socket.on('room_left', () => {
-    console.log('🚪 Покинули комнату');
+    console.log('Покинули комнату');
     leaveRoomCleanup();
 });
 
 socket.on('matchmaking_status', (data) => {
-    console.log('🎯 Статус поиска:', data);
+    console.log('Статус поиска:', data);
     if (data.status === 'waiting') {
         inMatchmaking = true;
         if (elements.matchmakingStatus) {
@@ -170,7 +169,7 @@ socket.on('matchmaking_status', (data) => {
 });
 
 socket.on('game_start', (data) => {
-    console.log('🎮 Игра началась');
+    console.log('Игра началась');
     inMatchmaking = false;
     if (elements.matchmakingStatus) {
         elements.matchmakingStatus.style.display = 'none';
@@ -183,12 +182,12 @@ socket.on('timer_update', (data) => {
 });
 
 socket.on('game_end', (data) => {
-    console.log('🏁 Игра завершена');
+    console.log('Игра завершена');
     endGame(data);
 });
 
 socket.on('word_result', (data) => {
-    console.log('📨 Результат слова:', data.word, data.valid ? '✅' : '❌');
+    console.log('Результат слова:', data.word, data.valid ? '✅' : '❌');
     if (data.valid) {
         myWords.push(data.word);
         renderMyWords();
@@ -203,7 +202,7 @@ socket.on('word_result', (data) => {
 });
 
 socket.on('game_state', (data) => {
-    console.log('🔄 Восстановление состояния игры');
+    console.log('Восстановление состояния игры');
     if (data.state === 'playing') {
         restoreGame(data);
     } else if (data.state === 'ended') {
@@ -221,7 +220,7 @@ socket.on('game_state', (data) => {
 });
 
 socket.on('error', (msg) => {
-    console.error('❌ Ошибка:', msg);
+    console.error('Ошибка:', msg);
     showStatus('Ошибка: ' + msg, 'danger');
 });
 
@@ -246,6 +245,18 @@ function updateProfile(data) {
     }
     if (elements.rankDisplay) {
         elements.rankDisplay.textContent = data.rank || 'Новичок';
+    }
+
+    if (elements.ratingDisplay) {
+        elements.ratingDisplay.style.cursor = 'pointer';
+        elements.ratingDisplay.title = 'Кликните для просмотра истории игр';
+        elements.ratingDisplay.addEventListener('click', () => fetchHistory());
+    }
+
+    if (elements.rankDisplay) {
+        elements.rankDisplay.style.cursor = 'pointer';
+        elements.rankDisplay.title = 'Кликните для просмотра таблицы рангов';
+        elements.rankDisplay.addEventListener('click', () => fetchRanks());
     }
 }
 
@@ -362,7 +373,6 @@ function updateRoom(data) {
         setState('playing');
     }
     
-    // Обновляем счет игроков из данных комнаты
     if (data.players && data.players.length > 0) {
         const scores = {};
         data.players.forEach(p => {
@@ -463,7 +473,7 @@ function renderBoard(board) {
     boardEl.innerHTML = '';
     
     if (!board || !Array.isArray(board)) {
-        console.error('❌ Ошибка: доска не является массивом', board);
+        console.error('Ошибка: доска не является массивом', board);
         return;
     }
     
@@ -702,6 +712,134 @@ function hideModal() {
         }
     } else {
         modal.style.display = 'none';
+    }
+}
+
+async function fetchHistory() {
+    try {
+        const response = await fetch('/api/history/' + currentUser.user_id);
+        const history = await response.json();
+        showHistoryModal(history);
+    } catch (e) {
+        console.error('Ошибка загрузки истории:', e);
+        showStatus('Не удалось загрузить историю игр', 'danger');
+    }
+}
+
+function showHistoryModal(history) {
+    const modal = elements.modal;
+    if (!modal) return;
+    
+    if (elements.modalTitle) {
+        elements.modalTitle.textContent = '📜 История игр';
+    }
+    
+    let html = '';
+    if (history && history.length > 0) {
+        history.forEach(game => {
+            const date = new Date(game.started_at).toLocaleDateString('ru-RU');
+            const time = new Date(game.started_at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+            const isWinner = game.is_winner === 1;
+            const change = game.rating_change || 0;
+            const changeText = change > 0 ? `+${change}` : change;
+            const changeColor = change > 0 ? 'text-success' : change < 0 ? 'text-danger' : 'text-muted';
+            
+            html += `
+                <div class="mb-2 p-2 bg-dark rounded">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>${date} ${time}</strong>
+                            <span class="badge ${isWinner ? 'bg-success' : 'bg-secondary'} ms-2">
+                                ${isWinner ? '🏆 Победа' : '❌ Поражение'}
+                            </span>
+                        </div>
+                        <div>
+                            <span class="badge bg-primary">${game.score} очков</span>
+                            <span class="badge ${changeColor}">${changeText}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+    } else {
+        html = '<p class="text-muted">У вас пока нет сыгранных игр</p>';
+    }
+    
+    if (elements.modalBody) {
+        elements.modalBody.innerHTML = html;
+    }
+    
+    if (typeof bootstrap !== 'undefined') {
+        const modalInstance = new bootstrap.Modal(modal);
+        modalInstance.show();
+    } else {
+        modal.style.display = 'block';
+    }
+}
+
+async function fetchRanks() {
+    try {
+        const response = await fetch('/api/ranks');
+        const ranks = await response.json();
+        showRanksModal(ranks);
+    } catch (e) {
+        console.error('Ошибка загрузки рангов:', e);
+        showStatus('Не удалось загрузить таблицу рангов', 'danger');
+    }
+}
+
+function showRanksModal(ranks) {
+    const modal = elements.modal;
+    if (!modal) return;
+    
+    if (elements.modalTitle) {
+        elements.modalTitle.textContent = '🏅 Таблица рангов';
+    }
+    
+    let html = `
+        <div class="table-responsive">
+            <table class="table table-dark table-hover">
+                <thead>
+                    <tr>
+                        <th>Ранг</th>
+                        <th>Минимальный рейтинг</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+    
+    ranks.sort((a, b) => b.min_rating - a.min_rating);
+    
+    ranks.forEach(rank => {
+        const isCurrent = currentUser && rank.rank === currentUser.rank;
+        html += `
+            <tr class="${isCurrent ? 'table-active' : ''}">
+                <td>
+                    ${rank.rank}
+                    ${isCurrent ? ' <span class="badge bg-success">Ваш ранг</span>' : ''}
+                </td>
+                <td>
+                    ${rank.min_rating === 0 ? '0+' : rank.min_rating + '+'}
+                </td>
+            </tr>
+        `;
+    });
+    
+    html += `
+                </tbody>
+            </table>
+        </div>
+    `;
+    
+    if (elements.modalBody) {
+        elements.modalBody.innerHTML = html;
+    }
+    
+    if (typeof bootstrap !== 'undefined') {
+        const modalInstance = new bootstrap.Modal(modal);
+        modalInstance.show();
+    } else {
+        modal.style.display = 'block';
     }
 }
 
