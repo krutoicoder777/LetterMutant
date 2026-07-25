@@ -63,29 +63,27 @@ const elements = {
 };
 
 socket.on('connect', () => {
-    console.log('Подключено к серверу');
+    console.log('🔌 Подключено к серверу');
+    const savedUsername = localStorage.getItem('username');
     if (currentUser && currentUser.username) {
         socket.emit('login', { username: currentUser.username });
-    } else {
-        const savedUsername = localStorage.getItem('username');
-        if (savedUsername) {
-            socket.emit('login', { username: savedUsername });
-        }
+    } else if (savedUsername) {
+        socket.emit('login', { username: savedUsername });
     }
 });
 
 socket.on('disconnect', () => {
-    console.log('Отключено от сервера');
+    console.log('⚠️ Отключено от сервера');
     stopTimer();
 });
 
 socket.on('connect_error', (err) => {
-    console.error('Ошибка подключения:', err);
+    console.error('❌ Ошибка подключения:', err);
     showStatus('Ошибка подключения к серверу', 'danger');
 });
 
 socket.on('login_success', (data) => {
-    console.log('Вход выполнен:', data.username);
+    console.log('✅ Вход выполнен:', data.username);
     currentUser = data;
     updateProfile(data);
     showApp(true);
@@ -96,8 +94,17 @@ socket.on('login_success', (data) => {
 });
 
 socket.on('login_error', (msg) => {
-    console.error('Ошибка входа:', msg);
-    showStatus('Ошибка: ' + msg, 'danger');
+    console.error('❌ Ошибка входа:', msg);
+    if (msg.includes('HTTP')) {
+        const savedUsername = localStorage.getItem('username');
+        if (savedUsername) {
+            setTimeout(() => {
+                socket.emit('login', { username: savedUsername });
+            }, 500);
+        }
+    } else {
+        showStatus('Ошибка: ' + msg, 'danger');
+    }
 });
 
 socket.on('leaderboard', (data) => {
@@ -105,7 +112,7 @@ socket.on('leaderboard', (data) => {
 });
 
 socket.on('room_created', (data) => {
-    console.log('Комната создана:', data.room);
+    console.log('🏠 Комната создана:', data.room);
     currentRoom = data.room;
     isOwner = true;
     showRoomCode(data.room);
@@ -113,7 +120,7 @@ socket.on('room_created', (data) => {
 });
 
 socket.on('room_joined', (data) => {
-    console.log('Присоединились к комнате:', data.room);
+    console.log('🔗 Присоединились к комнате:', data.room);
     currentRoom = data.room;
     isOwner = false;
     showRoomCode(data.room);
@@ -121,7 +128,7 @@ socket.on('room_joined', (data) => {
 });
 
 socket.on('room_update', (data) => {
-    console.log('Обновление комнаты:', data);
+    console.log('📩 Обновление комнаты:', data);
     if (data.room) {
         currentRoom = data.room;
         showRoomCode(data.room);
@@ -134,12 +141,12 @@ socket.on('room_update', (data) => {
 });
 
 socket.on('room_left', () => {
-    console.log('Покинули комнату');
+    console.log('🚪 Покинули комнату');
     leaveRoomCleanup();
 });
 
 socket.on('matchmaking_status', (data) => {
-    console.log('Статус поиска:', data);
+    console.log('🎯 Статус поиска:', data);
     if (data.status === 'waiting') {
         inMatchmaking = true;
         if (elements.matchmakingStatus) {
@@ -169,7 +176,7 @@ socket.on('matchmaking_status', (data) => {
 });
 
 socket.on('game_start', (data) => {
-    console.log('Игра началась');
+    console.log('🎮 Игра началась');
     inMatchmaking = false;
     if (elements.matchmakingStatus) {
         elements.matchmakingStatus.style.display = 'none';
@@ -182,12 +189,12 @@ socket.on('timer_update', (data) => {
 });
 
 socket.on('game_end', (data) => {
-    console.log('Игра завершена');
+    console.log('🏁 Игра завершена');
     endGame(data);
 });
 
 socket.on('word_result', (data) => {
-    console.log('Результат слова:', data.word, data.valid ? '✅' : '❌');
+    console.log('📨 Результат слова:', data.word, data.valid ? '✅' : '❌');
     if (data.valid) {
         myWords.push(data.word);
         renderMyWords();
@@ -202,7 +209,7 @@ socket.on('word_result', (data) => {
 });
 
 socket.on('game_state', (data) => {
-    console.log('Восстановление состояния игры');
+    console.log('🔄 Восстановление состояния игры');
     if (data.state === 'playing') {
         restoreGame(data);
     } else if (data.state === 'ended') {
@@ -220,7 +227,7 @@ socket.on('game_state', (data) => {
 });
 
 socket.on('error', (msg) => {
-    console.error('Ошибка:', msg);
+    console.error('❌ Ошибка:', msg);
     showStatus('Ошибка: ' + msg, 'danger');
 });
 
@@ -862,10 +869,14 @@ function login() {
         if (data.success) {
             currentUser = data;
             localStorage.setItem('username', username);
-            if (!socket.connected) {
-                socket.connect();
-            }
-            socket.emit('login', { username: username });
+            
+            // Небольшая задержка перед WebSocket-авторизацией
+            setTimeout(() => {
+                if (!socket.connected) {
+                    socket.connect();
+                }
+                socket.emit('login', { username: username });
+            }, 300);
         } else {
             showStatus('Ошибка: ' + data.error, 'danger');
         }

@@ -13,6 +13,9 @@ import pymorphy3
 app = Flask(__name__)
 app.config.from_object(Config)
 
+app.config['SESSION_PERMANENT'] = True
+app.config['PERMANENT_SESSION_LIFETIME'] = 3600 
+
 Session(app)
 
 socketio = SocketIO(app,
@@ -174,6 +177,7 @@ def login():
     session['user_id'] = user_id
     session['username'] = username
     session.modified = True
+    session.permanent = True
 
     stats = db.get_stats(user_id)
 
